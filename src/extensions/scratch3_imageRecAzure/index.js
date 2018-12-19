@@ -17,7 +17,10 @@ class Scratch3ImageRecBlocks{
         return {
             // The machine-readable name of this extension.
             id: 'imageRecExt',
-    
+            
+            // Show status indicator button
+            showStatusButton: true,
+
             // The human-readable name of this extension as string.
             name: formatMessage({
                 id: 'imageRecExt.name',
@@ -70,7 +73,7 @@ class Scratch3ImageRecBlocks{
         };
     }
 
-    recogImagebyURL(args){
+    recogImageByURL (args) {
     
         var imageURL = args.IMAGE_URL;
     

@@ -30,7 +30,7 @@ const builtinExtensions = {
     speech2text: Scratch3Speech2TextBlocks,
     ev3: Scratch3Ev3Blocks,
     makeymakey: Scratch3MakeyMakeyBlocks,
-    imageRecExt: Scratch3ImageRecBlocks
+    imageRecExt: Scratch3ImgRecBlocks
 };
 
 /**
