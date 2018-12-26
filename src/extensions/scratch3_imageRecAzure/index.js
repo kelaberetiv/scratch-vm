@@ -3,7 +3,7 @@ const BlockType = require('../../extension-support/block-type');
 const formatMessage = require('format-message');
 
 const blockIconURI = 'https://connectoricons-prod.azureedge.net/cognitiveservicescomputervision/icon_1.0.1046.1227.png';
-var customVisionSubKey = '';
+var customVisionPredKey = '';
 
 class Scratch3ImageRecBlocks{
 
@@ -131,10 +131,10 @@ class Scratch3ImageRecBlocks{
                         }
                     }
                 },
-                // Block that takes in subscription key for Custom Vision project
+                // Block that takes in prediction key for Custom Vision project
                 {
                    // Required: the machine-readable name of this operation.
-                   opcode: 'setSubscriptionKey',
+                   opcode: 'setPredictionKey',
 
                    // Required: the kind of block we're defining
                    blockType: BlockType.COMMAND,
@@ -142,16 +142,16 @@ class Scratch3ImageRecBlocks{
                    // Required: the human-readable text on this block, including argument
                    // placeholders.
                    text: formatMessage({
-                       id: 'imageRecExt.setSubsciptionKey',
-                       default: 'Set subscription key: [SUB_KEY]',
-                       description: 'Set subscription key for Custom Vision project'
+                       id: 'imageRecExt.setPredictionKey',
+                       default: 'Set prediction key: [PRED_KEY]',
+                       description: 'Set prediction key for Custom Vision project'
                    }),
 
                    // Required: Describe each argument.
                    arguments: {
                        // Required: the ID of the argument, which will be the name in the
                        // args object passed to the implementation function.
-                       SUB_KEY: {
+                       PRED_KEY: {
                            // Required: type of the argument / shape of the block input
                            type: ArgumentType.STRING,
    
@@ -281,13 +281,13 @@ class Scratch3ImageRecBlocks{
         }
     }
 
-    setSubscriptionKey(args){
-        var subKey = args.SUB_KEY;
-        if(subKey == ''){
-            console.log("Please enter valid subscription key!");
-            return "Please enter valid subscription key!";
+    setPredictionKey(args){
+        var predKey = args.PRED_KEY;
+        if(predKey == ''){
+            console.log("Please enter valid prediction key!");
+            return "Please enter valid prediction key!";
         }
-        customVisionSubKey = args.SUB_KEY;
+        customVisionPredKey = predKey;
     }
 }
 
@@ -324,8 +324,8 @@ function setupComputerVisionRequest(xhttp){
 
 // Function to setup XMLHttpRequest for Custom Vision API call
 function setupCustomVisionRequest(xhttp){
-    // Replace with valid subscription key accordingly
-    var subscriptionKey = customVisionSubKey;
+    // Replace with valid prediction key accordingly
+    var subscriptionKey = customVisionPredKey;
 
     // You must use the same Azure region in your REST API method as you used to
     // get your subscription keys.
@@ -351,34 +351,6 @@ function customVisionPredictFromURL(xhttp, imageURL){
 
     // Send request with imageURL data
     xhttp.send(JSON.stringify(data));
-}
-
-/**
- * Function that converts a string into its binary representation
- * 
- * @see https://gist.github.com/eyecatchup/6742657
- * @author https://github.com/eyecatchup
- */
-function stringToBinary(str, spaceSeparatedOctets) {
-    function zeroPad(num) {
-        return "00000000".slice(String(num).length) + num;
-    }
-
-    return str.replace(/[\s\S]/g, function(str) {
-        str = zeroPad(str.charCodeAt().toString(2));
-        return !1 == spaceSeparatedOctets ? str : str + " "
-    });
-}
-
-function stringToArrayBuffer(str) {
-    var buf = new ArrayBuffer(str.length);
-    var bufView = new Uint8Array(buf);
-
-    for (var i=0, strLen=str.length; i<strLen; i++) {
-        bufView[i] = str.charCodeAt(i);
-    }
-
-    return buf;
 }
 
 module.exports = Scratch3ImageRecBlocks;
