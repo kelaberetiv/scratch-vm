@@ -3,7 +3,10 @@ const BlockType = require('../../extension-support/block-type');
 const formatMessage = require('format-message');
 
 const blockIconURI = 'https://connectoricons-prod.azureedge.net/cognitiveservicescomputervision/icon_1.0.1046.1227.png';
+
+// Prediction key and prediction URL for user's Custom Vision project
 var customVisionPredKey = '';
+var customVisionPredURL = '';
 
 class Scratch3ImageRecBlocks{
 
@@ -159,7 +162,36 @@ class Scratch3ImageRecBlocks{
                            defaultValue: ''
                        }
                    } 
-                }
+                },
+                // Block that takes in prediction URL for Custom Vision project
+                {
+                    // Required: the machine-readable name of this operation.
+                    opcode: 'setPredictionURL',
+ 
+                    // Required: the kind of block we're defining
+                    blockType: BlockType.COMMAND,
+ 
+                    // Required: the human-readable text on this block, including argument
+                    // placeholders.
+                    text: formatMessage({
+                        id: 'imageRecExt.setPredictionURL',
+                        default: 'Set prediction URL: [PRED_URL]',
+                        description: 'Set prediction URL for Custom Vision project'
+                    }),
+ 
+                    // Required: Describe each argument.
+                    arguments: {
+                        // Required: the ID of the argument, which will be the name in the
+                        // args object passed to the implementation function.
+                        PRED_URL: {
+                            // Required: type of the argument / shape of the block input
+                            type: ArgumentType.STRING,
+    
+                            // Optional: the default value of the argument
+                            defaultValue: ''
+                        }
+                    } 
+                 }
             ]
     
         };
@@ -289,6 +321,15 @@ class Scratch3ImageRecBlocks{
         }
         customVisionPredKey = predKey;
     }
+
+    setPredictionURL(args){
+        var predURL = args.PRED_URL;
+        if(predURL == ''){
+            console.log("Please enter valid prediction URL!");
+            return "Please enter valid prediction URL!";
+        }
+        customVisionPredURL = predURL;
+    }
 }
 
 // Function to setup XMLHttpRequest for Computer Vision API call
@@ -329,10 +370,7 @@ function setupCustomVisionRequest(xhttp){
 
     // You must use the same Azure region in your REST API method as you used to
     // get your subscription keys.
-    var url =
-        "https://southcentralus.api.cognitive.microsoft.com/customvision/" + 
-        "v2.0/Prediction/264a421d-1075-4a4e-8a08-26efed57a75c/url?iterati" + 
-        "onId=c0ed068a-3587-446a-af1f-9503f25652e9";
+    var url = customVisionPredURL;
 
     // Open request
     xhttp.open("POST", url, false); //false to sync/wait till request complete
