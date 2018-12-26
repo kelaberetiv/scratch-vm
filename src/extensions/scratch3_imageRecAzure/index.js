@@ -3,8 +3,10 @@ const BlockType = require('../../extension-support/block-type');
 const formatMessage = require('format-message');
 
 const blockIconURI = 'https://connectoricons-prod.azureedge.net/cognitiveservicescomputervision/icon_1.0.1046.1227.png';
+var customVisionSubKey = '';
 
 class Scratch3ImageRecBlocks{
+
     constructor (runtime) {
         /**
          * The runtime instantiating this block package.
@@ -68,6 +70,8 @@ class Scratch3ImageRecBlocks{
                         }
                     }
                 },
+                // Block that predicts image from URL based on user-trained model
+                // in Microsoft Custom Vision
                 {
                     // Required: the machine-readable name of this operation.
                     opcode: 'predictFromModel',
@@ -96,6 +100,8 @@ class Scratch3ImageRecBlocks{
                         }
                     }
                 },
+                // Block that returns predicted image & certainty of prediction based
+                // on trained model in Custom Vision
                 {
                     // Required: the machine-readable name of this operation.
                     opcode: 'predictFromModelAndProb',
@@ -124,38 +130,36 @@ class Scratch3ImageRecBlocks{
                             defaultValue: ''
                         }
                     }
+                },
+                // Block that takes in subscription key for Custom Vision project
+                {
+                   // Required: the machine-readable name of this operation.
+                   opcode: 'setSubscriptionKey',
+
+                   // Required: the kind of block we're defining
+                   blockType: BlockType.COMMAND,
+
+                   // Required: the human-readable text on this block, including argument
+                   // placeholders.
+                   text: formatMessage({
+                       id: 'imageRecExt.setSubsciptionKey',
+                       default: 'Set subscription key: [SUB_KEY]',
+                       description: 'Set subscription key for Custom Vision project'
+                   }),
+
+                   // Required: Describe each argument.
+                   arguments: {
+                       // Required: the ID of the argument, which will be the name in the
+                       // args object passed to the implementation function.
+                       SUB_KEY: {
+                           // Required: type of the argument / shape of the block input
+                           type: ArgumentType.STRING,
+   
+                           // Optional: the default value of the argument
+                           defaultValue: ''
+                       }
+                   } 
                 }
-                // Experimental block that takes a local file hosted on localhost
-                /*{
-                    // Required: the machine-readable name of this operation.
-                    opcode: 'recogImageByLocalhostFile',
-
-                    // Required: the kind of block we're defining
-                    blockType: BlockType.REPORTER,
-
-                    // Required: the human-readable text on this block, including argument
-                    // placeholders.
-                    text: formatMessage({
-                        id: 'imageRecExt.recogImageByLocalhostFile',
-                        default: 'Localhost URI: [IMAGE_URI]',
-                        description: 'Recognise local image based on URI provided'
-                    }),
-
-                    // Required: Describe each argument.
-                    arguments: {
-                        // Required: the ID of the argument, which will be the name in the
-                        // args object passed to the implementation function.
-                        IMAGE_URI: {
-                            // Required: type of the argument / shape of the block input
-                            type: ArgumentType.STRING,
-    
-                            // Optional: the default value of the argument
-                            defaultValue: ''
-                        }
-                    }
-
-
-                }*/
             ]
     
         };
@@ -204,17 +208,6 @@ class Scratch3ImageRecBlocks{
         }
     }
 
-    customVisionPredictFromURL(xhttp, imageURL){
-        // Data containing image URL to send in POST request
-        var data =  {"Url": imageURL};
-        
-        // Set Request headers for XMLHttpRequest
-        xhttp.setRequestHeader("Content-Type", "application/json");
-    
-        // Send request with imageURL data
-        xhttp.send(JSON.stringify(data));
-    }
-
     predictFromModel(args){
 
         var imageURL = args.IMAGE_URL;
@@ -249,6 +242,7 @@ class Scratch3ImageRecBlocks{
         else{
             console.log("xhttp.readState:", xhttp.readyState);
             console.log("xhttp.status:", xhttp.status);
+            console.log(xhttp.response);
             return "Invalid URL!";
         }
     }
@@ -274,9 +268,9 @@ class Scratch3ImageRecBlocks{
         // If response is ready and request is successful/no errors
         if (xhttp.readyState === XMLHttpRequest.DONE && xhttp.status === 200) {
             var response = JSON.parse(xhttp.response);
-            console.log(response);
-            // Displays image predicted
-            return response;
+            item = response["predictions"][0]["tagName"];
+            prob = response["predictions"][0]["probability"];
+            return "Item: " + item + ", Probability: " + prob;
         }
         // Display invalid URL for all remaining errors and highlight error 
         // in console with status code
@@ -287,66 +281,17 @@ class Scratch3ImageRecBlocks{
         }
     }
 
-    /*recogImageByLocalhostFile (args){
-        var imageURI = args.IMAGE_URI;
-        console.log("Image URI: ", imageURI);
-
-        // If no URI entered, return warning message
-        if(imageURI == ""){
-            console.log("Please enter localhost URI...");
-            return "Please enter a localhost URI!";
+    setSubscriptionKey(args){
+        var subKey = args.SUB_KEY;
+        if(subKey == ''){
+            console.log("Please enter valid subscription key!");
+            return "Please enter valid subscription key!";
         }
-
-        // Request to get image from localhost
-        var getImage = new XMLHttpRequest();
-        
-        // Open request
-        getImage.open("GET", imageURI, false); //false to sync/wait till request complete
-        getImage.send();
-
-        // If response is ready and request is successful/no errors
-        if (getImage.readyState === XMLHttpRequest.DONE && getImage.status === 200) {
-            var rawImage = getImage.response;
-        }
-        
-        // Display invalid URI for all remaining errors and highlight error 
-        // in console with status code
-        else{
-            console.log("getImage.readState:", getImage.readyState);
-            console.log("getImage.status:", getImage.status);
-            return "Invalid local file URI!";
-        }
-
-        processImage = new XMLHttpRequest();
-        setupXMLHTTPRequest(processImage);
-
-        // Set Request headers for XMLHttpRequest
-        processImage.setRequestHeader("Content-Type", "application/octet-stream");
-
-        // Send request with imageURL data
-        processImage.send(rawImage);
-    
-        // If response is ready and request is successful/no errors
-        if (processImage.readyState === XMLHttpRequest.DONE && processImage.status === 200) {
-            var response = JSON.parse(processImage.response);
-            // Takes in caption returned from API call
-            caption = response["description"]["captions"][0]["text"];
-            console.log(caption);
-            // Displays caption
-            return caption;
-        }
-        // Display invalid URL for all remaining errors and highlight error 
-        // in console with status code
-        else{
-            console.log(processImage.response);
-            console.log("processImage.readState:", processImage.readyState);
-            console.log("processImage.status:", processImage.status);
-            return "Invalid file!";
-        }
-
-    }*/
+        customVisionSubKey = args.SUB_KEY;
+    }
 }
 
+// Function to setup XMLHttpRequest for Computer Vision API call
 function setupComputerVisionRequest(xhttp){
     // Replace with valid subscription key accordingly
     var subscriptionKey = "6ea075b7325c4df79d8464695622b2e1";
@@ -377,36 +322,35 @@ function setupComputerVisionRequest(xhttp){
     xhttp.setRequestHeader("Ocp-Apim-Subscription-Key", subscriptionKey);
 }
 
+// Function to setup XMLHttpRequest for Custom Vision API call
 function setupCustomVisionRequest(xhttp){
     // Replace with valid subscription key accordingly
-    var subscriptionKey = "73d00993d12d4e089e56bfda09b6f7b7";
+    var subscriptionKey = customVisionSubKey;
 
     // You must use the same Azure region in your REST API method as you used to
     // get your subscription keys.
-    var uriBase =
-        "https://southcentralus.api.cognitive.microsoft.com/customvision/v2.0/" +
-        "Prediction/264a421d-1075-4a4e-8a08-26efed57a75c/url?iterationId=c0ed0" + 
-        "68a-3587-446a-af1f-9503f25652e9";
-
-    // Request parameters.
-    // Ref: https://westus.dev.cognitive.microsoft.com/docs/services/5adf991815e1060e6355ad44/operations/56f91f2e778daf14a499e1fa
-    var params = {
-        "visualFeatures": "Description",
-        "details": "",
-        "language": "en",
-    };
-    
-    // Append all parameters to url string
-    var url = new URL(uriBase);
-    for (var key in params){
-        url.searchParams.append(key, params[key]);
-    }
+    var url =
+        "https://southcentralus.api.cognitive.microsoft.com/customvision/" + 
+        "v2.0/Prediction/264a421d-1075-4a4e-8a08-26efed57a75c/url?iterati" + 
+        "onId=c0ed068a-3587-446a-af1f-9503f25652e9";
 
     // Open request
     xhttp.open("POST", url, false); //false to sync/wait till request complete
 
     // Set Request headers for XMLHttpRequest
     xhttp.setRequestHeader("Prediction-Key", subscriptionKey);
+}
+
+// Function to call prediction from Custom Vision
+function customVisionPredictFromURL(xhttp, imageURL){
+    // Data containing image URL to send in POST request
+    var data =  {"Url": imageURL};
+    
+    // Set Request headers for XMLHttpRequest
+    xhttp.setRequestHeader("Content-Type", "application/json");
+
+    // Send request with imageURL data
+    xhttp.send(JSON.stringify(data));
 }
 
 /**
